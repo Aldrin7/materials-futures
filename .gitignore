@@ -1,0 +1,17 @@
+# Kaggle API credentials
+.kaggle/
+*.pkl
+*.npy
+*.zip
+__pycache__/
+*.pyc
+.DS_Store
+.env
+*token*
+*secret*
+*credential*
+# Large files that shouldn't be in git
+experiments/v1/checkpoints/
+materials_futures_sprint/checkpoints/
+materials_futures_sprint/data/*.npy
+*.tar.gz
