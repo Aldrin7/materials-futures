@@ -1,109 +1,88 @@
-# Materials Futures Research Sprint
+# Materials Futures — Multi-Fidelity Transformer
 
-## Multi-Fidelity Transformer for Crystal Property Prediction with Predictive Uncertainty
+A reproducible ML research pipeline for crystal property prediction with predictive uncertainty, targeting [Materials Futures](https://iopscience.iop.org/journal/2752-5724) (IOP Publishing, Scopus-indexed, free APC).
 
-### Quick Stats
-- **Compute:** Kaggle TPU v5e-8
-- **Models:** MFT, Random Forest, XGBoost, CGCNN
-- **Seeds:** 5 (42, 123, 456, 789, 1024)
+## Quick Start
 
-### Reproduction
+### Colab (recommended)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aldrin7/materials-futures/blob/main/materials-futures-colab.ipynb)
+
+1. Click the badge above
+2. Runtime → **T4 GPU** or **v5e-1 TPU**
+3. Run all cells
+4. Enter your [Materials Project](https://materialsproject.org) API key when prompted
+
+### Kaggle
+[Open on Kaggle](https://www.kaggle.com/code/aldrinmanon/materials-futures)
+
+1. Settings → Accelerator → **TPU v5e-8**
+2. Add-ons → Secrets → Add `MP_API_KEY`
+3. Run all cells
+
+## What This Does
+
+| Component | Details |
+|-----------|---------|
+| **Model** | Multi-Fidelity Transformer (JAX/Flax) |
+| **Baselines** | Random Forest, XGBoost, CGCNN |
+| **Data** | Materials Project + JARVIS-DFT + QMOF |
+| **Targets** | Formation energy (eV/atom), Band gap (eV) |
+| **Seeds** | 5 per model (42, 123, 456, 789, 1024) |
+| **Ablations** | 4 (multi-task, fidelity, depth, loss) |
+| **Uncertainty** | ECE, NLL, PICP, MPIW, Spearman ρ |
+| **Figures** | 6 publication-quality (300 DPI) |
+
+## Repository Structure
+
+```
+├── materials-futures-colab.ipynb    # Colab notebook (open this)
+├── materials-futures-sprint.ipynb   # Kaggle notebook
+├── kaggle_11h_cells.py             # Source code (34 cells)
+├── smoke_test.py                   # 10-min pipeline validation
+├── reproduce.py                    # Reproduce script
+├── HYPOTHESES.md                   # Pre-registered hypotheses
+├── REVISED_MASTER_PLAN.md          # 4-week post-sprint plan
+├── 11_HOUR_SPRINT.md               # Hour-by-hour schedule
+├── experiments/
+│   └── v1/
+│       ├── FREEZE_MANIFEST.json    # Results snapshot (SHA-256)
+│       ├── reproduce.py            # Load, verify, regenerate
+│       ├── CITATION.cff            # GitHub citation
+│       ├── configs/                # Per-run configurations
+│       ├── checkpoints/            # Model weights
+│       ├── predictions/            # Per-run predictions
+│       ├── metrics/                # JSON + CSV metrics
+│       ├── figures/                # Publication figures
+│       ├── figure_data/            # CSV data for figures
+│       ├── tables/                 # LaTeX + Markdown tables
+│       └── metadata/               # Environment, git, data manifest
+└── materials_futures_sprint/
+    ├── data/                       # Processed features
+    ├── figures/                    # Generated figures
+    ├── results/                    # Results tables
+    └── paper/                      # Paper draft
+```
+
+## Reproducibility
 
 ```bash
-# 1. Verify file integrity
-python reproduce.py
-
-# 2. Or full re-run: open the Kaggle notebook and run all cells
+python experiments/v1/reproduce.py --exp-version v1
 ```
 
-### Package Contents
+## Pre-Registered Hypotheses
 
-```
-materials_futures_sprint/          # Deliverable package
-├── README.md
-├── figures/                       # 6 publication-quality figures (300 DPI)
-├── results/                       # CSV tables + JSON summary
-├── paper/                         # Complete draft
-├── data/                          # Processed features + splits
-├── checkpoints/                   # Model weights (MFT)
-└── requirements.txt
+| Hypothesis | Criterion |
+|------------|-----------|
+| H1 (primary) | MFT beats baselines on at least one target, p < 0.05 |
+| H2 | Fidelity embedding improves accuracy |
+| H3 | Multi-task beats single-task |
+| H4 | Uncertainty correlates with error (ρ > 0.3) |
+| H5 | Low-uncertainty subset has 20%+ lower MAE |
 
-experiments/v1/                    # Frozen experiment snapshot
-├── FREEZE_MANIFEST.json           # SHA-256 hashes + timestamp
-├── reproduce.py                   # Load, verify, regenerate
-├── configs/
-├── checkpoints/                   # All models (MFT, RF, XGBoost, CGCNN)
-│   ├── mft_seed{42,123,456,789,1024}.pkl    # JAX params + metadata
-│   ├── rf_seed{42,123,456,789,1024}.pkl     # sklearn models
-│   ├── xgb_fe_seed{42,...}.json             # XGBoost formation energy
-│   ├── xgb_bg_seed{42,...}.json             # XGBoost band gap
-│   └── cgcnn_seed{42,...}.pkl              # CGCNN JAX params
-├── predictions/                   # Per-run predictions (enables re-analysis)
-│   ├── test_predictions_exp_*_mft_seed42.csv
-│   ├── val_predictions_exp_*_mft_seed42.csv
-│   └── ...
-├── logs/
-├── metrics/                       # All metrics + configs + checklist
-│   ├── results_summary.json
-│   ├── run_configs.json           # Per-run hyperparams + results
-│   ├── reproducibility_checklist.json
-│   └── uncertainty_metrics.csv
-├── figures/                       # 6 PNG (300 DPI)
-├── figure_data/                   # CSV data underlying each figure
-│   ├── fig1_parity_data.csv
-│   ├── fig2_comparison_data.csv
-│   ├── fig3_calibration_data.csv
-│   ├── fig4_ablation_data.csv
-│   ├── fig5_spearman_data.csv
-│   └── fig6_dataset_data.csv
-├── tables/                        # LaTeX + Markdown + CSV tables
-│   ├── results_table.tex
-│   ├── results_table.md
-│   └── main_results.csv
-├── paper/
-└── metadata/                      # Environment + git + data provenance
-    ├── environment.txt            # pip freeze + platform info
-    ├── requirements.txt           # Pinned deps only
-    ├── git_commit.txt             # Code version
-    └── data_manifest.json         # Dataset hashes + split definitions
-```
+## Target Journal
 
-### Model Loading
+**Materials Futures** (IOP Publishing) — Scopus + ESCI, free APC, fast turnaround.
 
-```python
-# Transformer
-import pickle
-with open('experiments/v1/checkpoints/mft_seed42.pkl', 'rb') as f:
-    ckpt = pickle.load(f)
-params = ckpt['params']
-# ckpt also contains: exp_id, model_architecture, param_count,
-#                     jax_version, dtype, seed, train_time_s
+## License
 
-# XGBoost
-import xgboost as xgb
-xgb_fe = xgb.XGBRegressor()
-xgb_fe.load_model('experiments/v1/checkpoints/xgb_fe_seed42.json')
-
-# Random Forest
-with open('experiments/v1/checkpoints/rf_seed42.pkl', 'rb') as f:
-    rf = pickle.load(f)
-pred = rf['fe_model'].predict(X_new)
-
-# Scaler (for new data)
-with open('materials_futures_sprint/data/scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
-X_scaled = scaler.transform(X_new)
-```
-
-### Requirements
-```
-mp-api>=0.40.0
-jarvis-tools>=2024.3.20
-flax>=0.8.0
-optax>=0.2.0
-einops>=0.7.0
-scikit-learn>=1.3.0
-xgboost>=2.0.0
-jax>=0.4.20
-scipy>=1.11.0
-```
+MIT
